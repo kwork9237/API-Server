@@ -8,6 +8,9 @@ const app = express();
 const port = config.PORT;
 const cors = require('cors');
 
+//값 확인
+//console.log(value);
+
 //setting option
 let corsOptions = {
     origin : '*',
