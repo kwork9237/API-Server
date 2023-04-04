@@ -10,6 +10,7 @@ module.exports = function(root, app) {
         if (p.isDirectory()) {
             if(p.name != "_controller")
                 arguments.callee(`${root}/${p.name}`, app);
+                //callee는 재귀함수이다. 계속 반복함
         }
 
         else {

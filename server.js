@@ -12,6 +12,8 @@ const cors = require('cors');
 //console.log(value);
 
 //setting option
+//cors는 네트워크 허용 (Access) 옵션
+//무조건 라우터 실행 이전에 허용되어야 한다.
 let corsOptions = {
     origin : '*',
     credential : true,
