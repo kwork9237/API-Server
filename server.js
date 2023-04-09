@@ -20,6 +20,13 @@ let corsOptions = {
 };
 app.use(cors(corsOptions));
 
+//////////////////////////////////////////////////////////////
+//상단은 필수 요소.
+
+app.use(express.json());
+app.use(express.urlencoded({extended : true}));
+
+
 //AutoRouter
 const autoRoute = require('./autoRoute');
 autoRoute('/api', app);
