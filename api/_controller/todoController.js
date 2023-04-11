@@ -197,11 +197,52 @@ const todoController = {
 
         try {
             let query = `INSERT INTO todo (title, done) VALUES `;
+
+            /* 
+            //방식 1
+            let temp;
+
+            for(let i = 0; i < len; i++) {
+                temp = `('${title}_${i}', '${done}')`;
+                res = await db.execute(query + temp);
+            }
+            */
+
+            //방식 2
+            let i = 0, arr = [];
+
+            //join 사용 안함
+            for(let i = 0; i < len; i++)
+                arr[i] = `('${title}_${i}', '${done}')`;
+
+            for(let i = 0; i < len; i++) {
+                if(i == len - 1)
+                    query += (arr[i]);
+                
+                else
+                    query += (arr[i] + ", ");
+            }
+
+            //console.log(query);
+            res = await db.execute(query);
+
+            if(res.affectedRows != 0) {
+                return resData(
+                    STATUS.S200.result,
+                    STATUS.S200.resultDesc,
+                    moment().format('LT')
+                );
+            }
+
+            /*
+            let query = `INSERT INTO todo (title, done) VALUES `;
             let arr = [];
 
             for(let i = 0; i < len; i++)
                 arr.push(`('${title}_${i}', '${done}')`);
 
+            //배열의 모든 요소에서 ", " 를 추가한다.
+            //query += arr.join(", ");
             query = query + arr.join(",");
             const [rows] = await db.execute(query);
 
@@ -212,6 +253,7 @@ const todoController = {
                     moment().format('LT')
                 );
             }
+            */
         }
 
         catch (e) {
