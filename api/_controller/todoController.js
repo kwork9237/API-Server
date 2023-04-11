@@ -6,7 +6,6 @@ const { resData, currentTime, isEmpty } = require("../../util/lib");
 const moment = require("../../util/moment");
 
 //Functions
-
 //list
 const getTotal = async() => {
     try {
@@ -22,7 +21,7 @@ const getTotal = async() => {
 };
 
 const getSelectOne = async (id) => {
-    try {``
+    try {
         const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.TODO} WHERE id = ?`;
         const values = [id];
         const [[{ cnt }]] = await db.execute(query, values);
@@ -47,7 +46,7 @@ const getList = async (req) => {
             where = `WHERE id < ${lastId}`;
 
         const query = `SELECT * FROM ${TABLE.TODO} ${where} order by id desc limit 0, ${len}`;
-        const [rows] = await db.execute(query);
+        const [rows] = await db.execute(query); //배열 안에 DATA가 담겨있음
 
         return rows;
     }
@@ -176,6 +175,7 @@ const todoController = {
 
     //reset
     reset : async (req) => {
+        //기존코드
         //DB Truncate
         try {
             const query = `TRUNCATE TABLE ${TABLE.TODO};`;
