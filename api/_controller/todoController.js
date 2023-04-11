@@ -199,7 +199,7 @@ const todoController = {
             let query = `INSERT INTO todo (title, done) VALUES `;
 
             /* 
-            //방식 1
+            //방식 1 - 바로 실행
             let temp;
 
             for(let i = 0; i < len; i++) {
@@ -208,7 +208,7 @@ const todoController = {
             }
             */
 
-            //방식 2
+            //방식 2 - Join 안쓴 배열 방식
             let i = 0, arr = [];
 
             //join 사용 안함
@@ -235,6 +235,7 @@ const todoController = {
             }
 
             /*
+            //기존코드
             let query = `INSERT INTO todo (title, done) VALUES `;
             let arr = [];
 
@@ -242,8 +243,9 @@ const todoController = {
                 arr.push(`('${title}_${i}', '${done}')`);
 
             //배열의 모든 요소에서 ", " 를 추가한다.
-            //query += arr.join(", ");
-            query = query + arr.join(",");
+            //query = query + arr.join(",");
+            
+            query += arr.join(", ");
             const [rows] = await db.execute(query);
 
             if(rows.affectedRows != 0) {
