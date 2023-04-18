@@ -1,6 +1,6 @@
 const TABLE = {
     TODO : "todo",
-    MyDB : "mydb",
+    MyDB : "test",
 };
 
 module.exports = TABLE;
