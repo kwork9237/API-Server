@@ -16,13 +16,13 @@ router.get("/", async(req, res) => {
 });
 
 //U : Update
-router.put("/", async(req, res) => {
+router.put("/:id", async(req, res) => {
     const result = await abookController.update(req);
     res.json(result);
 });
 
 //D : Delete
-router.delete("/", async(req, res) => {
+router.delete("/:id", async(req, res) => {
     const result = await abookController.delete(req);
     res.json(result);
 });

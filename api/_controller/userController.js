@@ -132,8 +132,8 @@ const userController = {
         const db_chk = !(await dbValCheck(colName, userid));
 
         //둘중 하나 없을 경우 ERROR
-        if(db_chk || isEmpty(userid))
-            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "userid is empty or data not found");
+        if(db_chk)
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found");
 
         //해당 DATA 삭제 시도
         try {

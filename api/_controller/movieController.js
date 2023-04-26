@@ -209,8 +209,8 @@ const movieController = {
         const db_chk = !(await dbValCheck(colName, movid));
 
         //값 검증
-        if(db_chk || isEmpty(movid))
-            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "movid is empty or data not found");
+        if(db_chk)
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found");
 
         try {
             const query = `DELETE FROM ${TABLE.MOVIE} WHERE ${colName} = '${movid}'`;
