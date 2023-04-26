@@ -7,10 +7,8 @@ const { resData,  isEmpty, getTime } = require("../../util/lib");
 //DB값 존재유무 확인
 const dbValCheck = async (colName, data) => {
     try {
-        //쿼리 및 데이터 확인
         const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.MOVIE} WHERE ${colName} = ?`;
         const val = [data];
-
         const [[{ cnt }]] = await db.execute(query, val);
 
         if(cnt == undefined || cnt == 0)
@@ -22,7 +20,40 @@ const dbValCheck = async (colName, data) => {
 
     catch(e) {
         console.log(e.message);
-        return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        return resData(STATUS.E300.result, STATUS.E300.resultDesc, getTime(), e.message);
+    }
+}
+
+//DB Search
+const dbSearch = async (colName, type, like = undefined, start = 0, end = 0) => {
+    let query;
+    let cnt;
+    
+    if(start == end || start > end)
+        return resData(STATUS.E100.result, STATUS.E100.resultDesc, getTime(), "start must over end value");
+
+    try {
+        //쿼리 결정
+        if(type == 'runtime') {
+            query = `SELECT count(*) AS cnt FROM ${TABLE.MOVIE} WHERE movie_runtime between ${start} and ${end} `;
+            [[{ cnt }]] = await db.execute(query);
+        }
+
+        else {
+            query = `SELECT count(*) AS cnt FROM ${TABLE.MOVIE} WHERE ${colName} LIKE '%${like}%'`;
+            [[{ cnt }]] = await db.execute(query, [like]);
+        }
+        
+        if(cnt == undefined || cnt == 0)
+            return false;
+
+        else
+            return true;
+    }
+
+    catch (e) {
+        console.log(e.message);
+        return resData(STATUS.E300.result, STATUS.E300.resultDesc, getTime(), e.message);
     }
 }
 
@@ -203,7 +234,7 @@ const movieController = {
 
         //DB Truncate
         try {
-            await db.execute(`TRUNCATE TABLE ${TABLE.USER}`);
+            await db.execute(`TRUNCATE TABLE ${TABLE.MOVIE}`);
 
             //초기화 후 바로 RETURN
             if(!isEmpty(type) && type == 'clear')
@@ -216,25 +247,19 @@ const movieController = {
 
         //값 INSERT
         try {
-            const query = `INSERT INTO ${TABLE.USER} (movie_name, movie_releasedate, movie_genre, movie_producer, movie_runtime, movie_country) VALUES `;
-            let temp;
+            const query = `INSERT INTO ${TABLE.MOVIE} (movie_name, movie_releasedate, movie_genre, movie_producer, movie_runtime, movie_country) VALUES `;
+            let temp, x = 1;
 
             for(let i = 1; i <= 100; i++) {
-                temp `('name_${i}', '')`;
+                if(i % 10 == 0)
+                    x += 1;
+
+                //연도 및 제조사 구분을 위해 일부러 x값을 넣음
+                temp = `('name_${i}', '${2000 + x}-01-01', 'action', 'producer_${x}', ${x}, 'kr')`;
+                await db.execute(query + temp);
             }
 
             return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, "DUMMY DATA INSERTED");
-
-            /*
-
-
-        `movie_name` varchar(50) DEFAULT NULL,
-        `movie_releasedate` datetime DEFAULT NULL,
-        `movie_genre` varchar(20) DEFAULT NULL,
-        `movie_producer` varchar(45) DEFAULT NULL,
-        `movie_runtime` int DEFAULT NULL COMMENT 'by minute',
-        `movie_country` varchar(15) DEFAULT NULL,
-    */
         }
 
         catch (e) {
@@ -244,12 +269,34 @@ const movieController = {
     
     //Additional Features
 
-    //R : list
+    //R : list (order uid)
     list : async(req) => {
         ntime = getTime();
 
-        try {
+        let { start, cnt } = req.query;
 
+        //데이터 확인
+        if(isEmpty(start) || isEmpty(cnt))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "start or end is empty");
+
+        //수 아니면 에러 리턴
+        if(isNaN(start) || isNaN(cnt))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "start or end is not integer type");
+
+        //문자열 to 숫자
+        else {
+            start = parseInt(start) - 1;
+            cnt = parseInt(cnt);
+
+            if(start < 0 || cnt < 1)
+                return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "start or end is not negative values");
+        }
+
+        try {
+            const query = `SELECT * FROM ${TABLE.MOVIE} ORDER BY movid LIMIT ${start}, ${cnt}`;
+            const [res] = await db.execute(query);
+
+            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, res);
         }
 
         catch (e) {
@@ -257,12 +304,75 @@ const movieController = {
         }
     },
     
-    //R : advancedSearch
+    //R : advancedSearch (date => year)
     advancedSearch : async(req) => {
         ntime = getTime();
 
-        try {
+        let { type, like, start, end, lims, lime } = req.query;
+        const { name, date, genre, producer, runtime, country } = req.body;
 
+        let update_data;
+
+        //특정 정보 선택
+        //name, date, genre, producer, runtime, country
+
+        //정보 처리
+        if(type == 'name') {
+            type = 'movie_name';
+            update_data = name;
+        } 
+        else if(type == 'date') {
+            type = 'movie_releasedate';
+            update_data = date;
+        }
+        else if(type == 'genre') {
+            type = 'movie_genre';
+            update_data = genre;
+        }
+        else if(type == 'producer') {
+            type = 'movie_producer';
+            update_data = producer;
+        }
+        else if(type == 'runtime') {
+            type = 'movie_runtime';
+            update_data = runtime;
+        }
+        else if(type == 'country') {
+            type = 'movie_country';
+            update_data = country;
+        } 
+
+        //시작, 끝값 확인
+        if(isEmpty(start) || isEmpty(end) || isEmpty(like) || isEmpty(type))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "parameter is empty");
+
+        //수 아니면 에러 리턴
+        if(isNaN(start) || isNaN(end))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "start or end is not integer type");
+
+        //DB 검증
+        if(!(await dbSearch(type, update_data, like, start, end)))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found (check your postman param and body)");
+
+        try {
+            let temp;
+            let query, res;
+
+            //컬럼값 제한을 두고 싶을때 사용
+            if(lims != undefined && lime != undefined)
+                temp = `LIMIT ${lims}, ${lime}`;
+
+            if(type == 'movie_runtime') {
+                query = `SELECT * FROM ${TABLE.MOVIE} WHERE movie_runtime between ${start} and ${end}` + temp;
+                [res] = await db.execute(query);
+            }
+            
+            else {
+                query = `SELECT * FROM ${TABLE.MOVIE} WHERE ${type} LIKE '%${like}%'` + temp;
+                [res] = await db.execute(query, [like]);
+            }
+
+            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, res);
         }
 
         catch (e) {
