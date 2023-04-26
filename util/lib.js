@@ -11,6 +11,11 @@ const lib = {
         else
             return false;
     },
+
+    //현재 시간 반환
+    getTime() {
+        return moment().format('LT');
+    }, 
 };
 
 module.exports = lib;

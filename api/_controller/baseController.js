@@ -1,15 +1,17 @@
+/**
+ * API - 기본구조 
+ * 작성할 CRUD 들의 기본 구조.
+ * 이 틀 안에서 참조할 TABLE, VALUE, function 등을 추가한다.
+ * 
+ */
+
 //requirements
 const db = require('../../plugins/mysql');
 const TABLE = require("../../util/TABLE");
 const STATUS = require("../../util/STATUS");
-const { resData, currentTime, isEmpty } = require("../../util/lib");
-const moment = require("../../util/moment");
+const { resData, currentTime, isEmpty, getTime } = require("../../util/lib");
 
 //함수
-//현재 시간을 반환하는 함수
-function getTime() {
-    return moment().format('LT');
-}
 
 //db 값 확인 (변수명 변경가능)
 const dbValCheck = async (data) => {
@@ -34,7 +36,7 @@ const dbValCheck = async (data) => {
     }
 }
 
-//메인 작동부
+//메인 작동부 (이름이 바뀌면 module.exports 값이 변경됨)
 const base = {
     bcreate : async (req) => {
         //현재 시간 지정
@@ -75,11 +77,14 @@ const base = {
         const ntime = getTime();
 
         const { data } = req.query; //단일 ID read
+
+        //data값을 가져와 비교해야 하기 때문에 data 밑에 있음.
         const dbchk = await dbValCheck(data);
 
         //컬럼 이름 지정
         const colName = "idtest";
 
+        //db에 값이 없거나 파라메터 없을 경우
         if(!dbchk || isEmpty(data))
             return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime);
 
@@ -104,13 +109,14 @@ const base = {
         const ntime = getTime();
         const dbchk = await dbValCheck(id);
 
+        //파라메터와 body name는 변경 가능한 값이다.
         const { id } = req.params;
         const { testcol, testcol1, testcol2 } = req.body;
 
         //컬럼 이름 지정
         const colName = "idtest";
 
-        //데이터가 없을 경우 파라메터 에러 리턴
+        //db에 값이 없거나 파라메터 없을 경우
         if(!dbchk || isEmpty(id) || isEmpty(testcol) || isEmpty(testcol1) || isEmpty(testcol2))
             return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime);
 
@@ -132,14 +138,14 @@ const base = {
     },
 
     bdelete : async (req) => {
-        const ntime = getTime();
+        const ntime = test();
         const { id } = req.params;
         const dbchk = await dbValCheck(id);
         
         //컬럼 이름 지정
         const colName = "idtest";
 
-        //db에 값이 없거나 비어있을 경우
+        //db에 값이 없거나 파라메터 없을 경우
         if(!dbchk || isEmpty(id))
             return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime);
 
@@ -159,6 +165,32 @@ const base = {
             return resData(STATUS.E300.result, STATUS.E100.resultDesc, ntime);
         }
     },
+
+    //reset
+    breset : async (req) => {
+        const ntime = getTime();
+
+        //DB Truncate
+        try {
+            const query = `TRUNCATE TABLE ${TABLE.MyDB};`;
+            await db.execute(query);
+        }
+
+        catch (e) {
+            console.log(e.message);
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime);
+        }
+
+        //더미데이터 insert
+        try {
+
+        }
+
+        catch (e) {
+            console.log(e.message);
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime);
+        }
+    }
 }
 
 module.exports = base;

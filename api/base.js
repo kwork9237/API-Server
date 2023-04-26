@@ -1,3 +1,5 @@
+//기본 틀 잡는 용도로 구성함
+
 const router = require('express').Router();
 const baseController = require('./_controller/baseController');
 
