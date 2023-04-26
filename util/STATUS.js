@@ -1,4 +1,5 @@
 const STATUS = {
+    T000 : {result : 0, resultDesc : "TEST"}, //임의로 추가한 테스트용 (작동여부 확인)
     S200 : {result : 200, resultDesc : "Success"},
     S201 : {result : 201, resultDesc : "데이터 없음"},
     E100 : {result : -100, resultDesc : "필수 파라메터 에러"},

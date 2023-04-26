@@ -35,13 +35,13 @@ router.post("/reset", async(req, res) => {
 
 //Additional Features
 //R : List
-router.get("/", async(req, res) => {
+router.get("/list", async(req, res) => {
     const result = await movieController.list(req);
     res.json(result);
 });
 
 //R : advancedSearch
-router.get("/", async(req, res) => {
+router.get("/asearch", async(req, res) => {
     const result = await movieController.advancedSearch(req);
     res.json(result);
 });

@@ -16,13 +16,13 @@ router.get("/", async(req, res) => {
 });
 
 //U : User Alter - PW
-router.put("/:id", async(req, res) => {
+router.put("/", async(req, res) => {
     const result = await userController.pwchg(req);
     res.json(result);
 });
 
-//D : User Delete
-router.delete("/:id", async(req, res) => {
+//D : User Delete (파라메터로 동작되게 설정)
+router.delete("/:userid", async(req, res) => {
     const result = await userController.delete(req);
     res.json(result);
 });
@@ -34,26 +34,27 @@ router.post("/reset", async(req, res) => {
 });
 
 //Additional Features
+//라우터에 설정된 링크가 동일한 경우, 먼저 정의된 요청이 우선된다.
 //R : User List (Multiple)
-router.get("/", async(req, res) => {
+router.get("/list", async(req, res) => {
     const result = await userController.list(req);
     res.json(result);
 });
 
 //R : User Rank List
-router.get("/", async (req, res) => {
+router.get("/rank", async (req, res) => {
     const result = await userController.rank(req);
     res.json(result);
 });
 
 //U : User ban
-router.delete("/:id", async(req, res) => {
+router.put("/ban/:userid", async(req, res) => {
     const result = await userController.ban(req);
     res.json(result);
 });
 
 //U : Events (playcount, kill, death)
-router.put("/", async (req, res) => {
+router.put("/events", async (req, res) => {
     const result = await userController.events(req);
     res.json(result);
 });

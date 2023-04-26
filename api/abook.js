@@ -33,23 +33,16 @@ router.post("/reset", async(req, res) => {
     res.json(result);
 });
 
-
 //Additional Features
 //R : list
-router.get("/", async(req, res) => {
+router.get("/list", async(req, res) => {
     const result = await abookController.list(req);
     res.json(result);
 });
 
 //R : total
-router.get("/", async(req, res) => {
+router.get("/total", async(req, res) => {
     const result = await abookController.total(req);
-    res.json(result);
-});
-
-//D : delete_list
-router.delete("/", async(req, res) => {
-    const result = await abookController.delete_list(req);
     res.json(result);
 });
 
