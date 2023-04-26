@@ -182,13 +182,13 @@ const abookController = {
         }
 
         try {
-            const query = `INSERT INTO ${TABLE.ABOOK} (abook_date, abook_title, abook_value, abook_memo) VALUES `;
+            const query = `INSERT INTO ${TABLE.ABOOK} (abook_date, abook_title, abook_value, abook_type, abook_memo) VALUES `;
             let temp, x = 1;
 
             for(let i = 1; i <= 100; i++) {
                 if(i % 10 == 0) x += 1;
 
-                temp = `('${2000 + x}-02-02', 'title_${i}', ${1000 * x}, 'memo_${i}')`;
+                temp = `('${2000 + x}-02-02', 'title_${i}', ${1000 * x}, 'increase', 'memo_${i}')`;
                 await db.execute(query + temp);
             }
 
@@ -236,27 +236,34 @@ const abookController = {
         }
     },
 
-    //R : total (date is optional)
+    //R : total (date is optional, year only)
     total : async (req) => {
         ntime = getTime();
 
         const { type, date } = req.body;
+        let like;
+        
+        if(type == 'increase')
+            chk = true;
+        else if(type == 'decrease')
+            chk == true;
+        else
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "type must 'increase', 'decrease'");
+
+        //숫자가 입력되면 false 리턴
+        if(date != undefined && !isNaN(date)) like = parseInt(date);
+        else console.log("WARN : date value must integer.");
         
         try {
-            const query = ``;
-        }
+            let query, res;
+            
+            //쿼리 설정
+            if(like != undefined) query = `SELECT sum(abook_value) FROM ${TABLE.ABOOK} WHERE abook_date LIKE '%${like}%' AND abook_type = '${type}'`;
+            else query = `SELECT sum(abook_value) as total FROM ${TABLE.ABOOK} WHERE abook_type = '${type}'`;
 
-        catch (e) {
-            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
-        }
-    },
+            [[res]] = await db.execute(query);
 
-    //D : delList
-    delList : async (req) => {
-        ntime = getTime();
-
-        try {
-            const query = ``;
+            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, {type, res});
         }
 
         catch (e) {
@@ -266,11 +273,3 @@ const abookController = {
 }
 
 module.exports = abookController;
-
-/*
-
-  `abook_date` varchar(20) DEFAULT NULL,
-  `abook_value` int DEFAULT NULL,
-  `abook_type` int DEFAULT NULL,
-  `abook_memo` varchar(50) DEFAULT NULL,
-*/

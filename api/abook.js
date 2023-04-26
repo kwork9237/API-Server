@@ -46,10 +46,4 @@ router.get("/total", async(req, res) => {
     res.json(result);
 });
 
-//D : Delete List
-router.delete("/delList", async(req, res) => {
-    const result = await abookController.delete(req);
-    res.json(result);
-});
-
 module.exports = router;

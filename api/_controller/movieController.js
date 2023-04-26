@@ -251,8 +251,7 @@ const movieController = {
             let temp, x = 1;
 
             for(let i = 1; i <= 100; i++) {
-                if(i % 10 == 0)
-                    x += 1;
+                if(i % 10 == 0) x += 1;
 
                 //연도 및 제조사 구분을 위해 일부러 x값을 넣음
                 temp = `('name_${i}', '${2000 + x}-01-01', 'action', 'producer_${x}', ${x}, 'kr')`;
