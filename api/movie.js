@@ -9,14 +9,14 @@ router.post("/", async(req, res) => {
     res.json(result);
 });
 
-//R : getInfo //single
+//R : getInfo
 router.get("/", async(req, res) => {
     const result = await movieController.getInfo(req);
     res.json(result);
 });
 
 //U : Update
-router.get("/:id", async(req, res) => {
+router.put("/:id", async(req, res) => {
     const result = await movieController.update(req);
     res.json(result);
 });

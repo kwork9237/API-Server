@@ -22,6 +22,7 @@ const dbValCheck = async (colName, data) => {
     }
 
     catch(e) {
+        console.log(e.message);
         return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
     }
 }
@@ -67,10 +68,11 @@ const userController = {
         }
     },
 
-    //R : Read
+    //R : Read (getInfo)
     getInfo : async(req) => {
         ntime = getTime();
 
+        //값 Read, db 확인
         const { userid } = req.body;
         const colName = "user_id";
         const db_chk = !(await dbValCheck(colName, userid));
@@ -97,6 +99,7 @@ const userController = {
     pwchg : async(req) => {
         ntime = getTime();
 
+        //값 Read, db 확인
         const { userid, password } = req.body;
         const colName = "user_id";
         const db_chk = !(await dbValCheck(colName, userid));
@@ -185,6 +188,7 @@ const userController = {
     },
 
     //Additional Features
+    //R : list
     list : async(req) => {
         ntime = getTime();
 
@@ -224,6 +228,7 @@ const userController = {
         }
     },
 
+    //R : rank
     rank : async(req) => {
         ntime = getTime();
 
@@ -237,10 +242,17 @@ const userController = {
         if(type == 'kill') type = 'user_kill';
         else if (type == 'death') type = 'user_death';
         else if (type == 'playcount') type = 'user_playcount';
-        else type = 0;
+        else return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "type not defined");
 
-        if(type == 0)
-            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "type not defined")
+        /*
+        //switch도 가능하나 가독성 떨어져서 사용 안함
+        switch(type) {
+            case 'kill' : type = 'user_kill'; break;
+            case 'death' : type = 'user_death'; break;
+            case 'playcount' : type = 'user_playcount'; break;
+            default : type = 0; break;
+        }
+        */
 
         try {
             //내림차순 데이터 (상위 10명만)
@@ -255,6 +267,7 @@ const userController = {
         }
     },
 
+    //U : ban
     ban : async(req) => {
         ntime = getTime();
 
@@ -280,6 +293,7 @@ const userController = {
         }
     },
 
+    //U : events
     events : async(req) => {
         ntime = getTime();
 
@@ -315,12 +329,3 @@ const userController = {
 }
 
 module.exports = userController;
-
-/*
-  `user_id` varchar(15) NOT NULL,
-  `user_pw` varchar(45) NOT NULL,
-  `user_kill` int DEFAULT '0',
-  `user_death` int DEFAULT '0',
-  `user_playcount` int DEFAULT '0',
-  `user_banned` tinyint DEFAULT '0',
-*/

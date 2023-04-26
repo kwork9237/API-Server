@@ -16,13 +16,13 @@ router.get("/", async(req, res) => {
 });
 
 //U : Update
-router.put("/:id", async(req, res) => {
+router.put("/", async(req, res) => {
     const result = await abookController.update(req);
     res.json(result);
 });
 
 //D : Delete
-router.delete(":/id", async(req, res) => {
+router.delete("/", async(req, res) => {
     const result = await abookController.delete(req);
     res.json(result);
 });
@@ -46,10 +46,10 @@ router.get("/total", async(req, res) => {
     res.json(result);
 });
 
-//RS : clear (dummy not insert)
-router.post("/clear", async(req, res) => {
-    const result = await abookController.clear(req);
+//D : Delete List
+router.delete("/delList", async(req, res) => {
+    const result = await abookController.delete(req);
     res.json(result);
-})
+});
 
 module.exports = router;

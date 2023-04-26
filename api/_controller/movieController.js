@@ -4,48 +4,271 @@ const STATUS = require("../../util/STATUS");
 const { resData,  isEmpty, getTime } = require("../../util/lib");
 
 //function
+//DB값 존재유무 확인
+const dbValCheck = async (colName, data) => {
+    try {
+        //쿼리 및 데이터 확인
+        const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.MOVIE} WHERE ${colName} = ?`;
+        const val = [data];
 
+        const [[{ cnt }]] = await db.execute(query, val);
+
+        if(cnt == undefined || cnt == 0)
+            return false;
+
+        else
+            return true;
+    }
+
+    catch(e) {
+        console.log(e.message);
+        return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+    }
+}
 
 //main
 const movieController = {
     //Base CRUD
+
+    //C : Create
     create : async(req) => {
+        //현재 시간 (모든 컨트롤러 동일)
+        ntime = getTime();
 
+        //id & password
+        const { name, release, genre, producer, runtime, country } = req.body;
+
+        //Data Check
+        if(isEmpty(name) || isEmpty(release) || isEmpty(genre) || isEmpty(producer) || isEmpty(runtime) || isEmpty(country))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "body data is empty");
+
+        //실행
+        try {
+            //쿼리 정의 (테이블은 변수형으로 사용, 컬럼값 지정)
+            //같은 이름의 영화가 있을 수 있으므로 movie_name는 unique 해제
+            const query = `INSERT INTO ${TABLE.MOVIE} (movie_name, movie_releasedate, movie_genre, movie_producer, movie_runtime, movie_country) VALUES (?, ?, ?, ?, ?, ?)`;
+            const value = [ name, release, genre, producer, runtime, country ];
+
+            //INSERT의 Return은  [ ResultSetHeader { ... }, ]
+            const [ res ] = await db.execute(query, value);
+
+            if(res.affectedRows == 1) {
+                const message = "Movie Data Added!";
+
+                //data가 any로 리턴되므로 메시지 추가리턴
+                return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, message);
+            }
+        }
+
+        //Error Status, Error Message Return
+        catch(e) {
+            console.log(e.message);
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, "error : " + e.message);
+        }
     },
 
+    //R : Read (getInfo)
     getInfo : async(req) => {
+        ntime = getTime();
 
+        //값 설정
+        const { mvname } = req.body;
+        const colName = "movie_name";
+        const db_chk = !(await dbValCheck(colName, mvname));
+
+        //값 확인
+        if(db_chk || isEmpty(mvname))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "mvname is Empty or data not found");
+
+        //값 불러오기
+        try {
+            //같은 이름의 영화를 전부 불러옴 (최대 10개)
+            const query = `SELECT * from ${TABLE.MOVIE} WHERE ${colName} = '${mvname}' LIMIT 10`;
+            const [res] = await db.execute(query);
+
+            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, res);
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        }
     },
 
+    //U : Update
     update : async(req) => {
+        ntime = getTime();
 
+        let { type } = req.query;
+        const { name, date, genre, producer, runtime, country } = req.body;
+        const { id } = req.params;
+
+        let update_data;
+
+        //업데이트할 정보 선택
+        //name, date, genre, producer, runtime, country, all
+
+        if(type == 'name') {
+            type = 'movie_name';
+            update_data = name;
+        } 
+        else if(type == 'date') {
+            type = 'movie_releasedate';
+            update_data = date;
+        }
+        else if(type == 'genre') {
+            type = 'movie_genre';
+            update_data = genre;
+        }
+        else if(type == 'producer') {
+            type = 'movie_producer';
+            update_data = producer;
+        }
+        else if(type == 'runtime') {
+            type = 'movie_runtime';
+            update_data = runtime;
+        }
+        else if(type == 'country') {
+            type = 'movie_country';
+            update_data = country;
+        } 
+        else if(type == 'all') {
+            type = 'all';
+            if(isEmpty(name) || isEmpty(date) || isEmpty(genre) || isEmpty(producer) || isEmpty(runtime) || isEmpty(country))
+                return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data is Empty")
+        }
+        else return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "type not defined");
+
+        //데이터 검증
+        if(type != 'all') {
+            if(isEmpty(type) || isEmpty(update_data))
+                return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "type or data is Empty");
+
+            if(!(await dbValCheck(type, update_data)))
+                return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found");
+        }
+
+        else
+            if(!(await dbValCheck("movid", id))) return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found");
+
+        try {
+            //타입에 따른 쿼리 결정
+            let query;
+            if(type == 'all')
+                query = `UPDATE ${TABLE.MOVIE} SET movie_name = '${name}', movie_releasedate = '${date}', movie_genre = '${genre}', movie_producer = '${producer}', movie_runtime = ${runtime}, movie_country = '${country}' WHERE movid = ${id}`;
+            else
+                query = `UPDATE ${TABLE.MOVIE} SET ${type} = '${update_data}' WHERE movid = ${id}`;
+
+            const [res] = await db.execute(query);
+            
+            if(res.affectedRows == 1)
+                return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, `update Success [movid : ${id} / movname : ${name}]`);
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        }
     },
 
+    //D : Delete (movid only)
     delete : async(req) => {
+        ntime = getTime();
 
+        const { movid } = req.params;
+        const colName = "movid";
+        const db_chk = !(await dbValCheck(colName, movid));
+
+        //값 검증
+        if(db_chk || isEmpty(movid))
+            return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "movid is empty or data not found");
+
+        try {
+            const query = `DELETE FROM ${TABLE.MOVIE} WHERE ${colName} = '${movid}'`;
+            const [res] = await db.execute(query);
+
+            if(res.affectedRows == 1)
+            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, movid + " DELETE SUCCESS");
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        }
     },
 
+    //RS : reset
     reset : async(req) => {
+        ntime = getTime();
 
+        //더미데이터 쓰기 결정
+        const { type } = req.body;
+
+        //DB Truncate
+        try {
+            await db.execute(`TRUNCATE TABLE ${TABLE.USER}`);
+
+            //초기화 후 바로 RETURN
+            if(!isEmpty(type) && type == 'clear')
+                return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, "ONLY TRUNCATE");
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, "ERROR : " + e);
+        }
+
+        //값 INSERT
+        try {
+            const query = `INSERT INTO ${TABLE.USER} (movie_name, movie_releasedate, movie_genre, movie_producer, movie_runtime, movie_country) VALUES `;
+            let temp;
+
+            for(let i = 1; i <= 100; i++) {
+                temp `('name_${i}', '')`;
+            }
+
+            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, "DUMMY DATA INSERTED");
+
+            /*
+
+
+        `movie_name` varchar(50) DEFAULT NULL,
+        `movie_releasedate` datetime DEFAULT NULL,
+        `movie_genre` varchar(20) DEFAULT NULL,
+        `movie_producer` varchar(45) DEFAULT NULL,
+        `movie_runtime` int DEFAULT NULL COMMENT 'by minute',
+        `movie_country` varchar(15) DEFAULT NULL,
+    */
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        }
     },
     
     //Additional Features
-    list : async(req) => {
 
+    //R : list
+    list : async(req) => {
+        ntime = getTime();
+
+        try {
+
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        }
     },
     
+    //R : advancedSearch
     advancedSearch : async(req) => {
+        ntime = getTime();
 
+        try {
+
+        }
+
+        catch (e) {
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, ntime, e.message);
+        }
     }
 }
 
 module.exports = movieController;
-
-/*
-  `movie_name` varchar(50) DEFAULT NULL,
-  `movie_relesedate` datetime DEFAULT NULL,
-  `movie_genre` varchar(20) DEFAULT NULL,
-  `movie_producer` varchar(45) DEFAULT NULL,
-  `movie_runtime` int DEFAULT NULL COMMENT 'by minute',
-  `movie_country` varchar(15) DEFAULT NULL,
-*/
