@@ -173,9 +173,6 @@ const movieController = {
         if(type != 'all') {
             if(isEmpty(type) || isEmpty(update_data))
                 return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "type or data is Empty");
-
-            if(!(await dbValCheck(type, update_data)))
-                return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found");
         }
 
         else
