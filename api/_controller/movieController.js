@@ -25,7 +25,7 @@ const dbValCheck = async (colName, data) => {
 }
 
 //DB Search
-const dbSearch = async (colName, type, like = undefined, start = 0, end = 0) => {
+const dbSearch = async (type, colName, like, start = 0, end = 0) => {
     let query;
     let cnt;
     
@@ -35,13 +35,13 @@ const dbSearch = async (colName, type, like = undefined, start = 0, end = 0) => 
     try {
         //쿼리 결정
         if(type == 'runtime') {
-            query = `SELECT count(*) AS cnt FROM ${TABLE.MOVIE} WHERE movie_runtime between ${start} and ${end} `;
+            query = `SELECT count(*) AS cnt FROM ${TABLE.MOVIE} WHERE movie_runtime between ${start} and ${end}`;
             [[{ cnt }]] = await db.execute(query);
         }
 
         else {
             query = `SELECT count(*) AS cnt FROM ${TABLE.MOVIE} WHERE ${colName} LIKE '%${like}%'`;
-            [[{ cnt }]] = await db.execute(query, [like]);
+            [[{ cnt }]] = await db.execute(query);
         }
         
         if(cnt == undefined || cnt == 0)
@@ -205,6 +205,8 @@ const movieController = {
         const colName = "movid";
         const db_chk = !(await dbValCheck(colName, movid));
 
+        console.log(movid);
+
         //값 검증
         if(db_chk)
             return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found");
@@ -214,7 +216,7 @@ const movieController = {
             const [res] = await db.execute(query);
 
             if(res.affectedRows == 1)
-            return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, movid + " DELETE SUCCESS");
+                return resData(STATUS.S200.result, STATUS.S200.resultDesc, ntime, movid + " DELETE SUCCESS");
         }
 
         catch (e) {
@@ -305,38 +307,15 @@ const movieController = {
         ntime = getTime();
 
         let { type, like, start, end, lims, lime } = req.query;
-        const { name, date, genre, producer, runtime, country } = req.body;
+        let colName;
 
-        let update_data;
-
-        //특정 정보 선택
-        //name, date, genre, producer, runtime, country
-
-        //정보 처리
-        if(type == 'name') {
-            type = 'movie_name';
-            update_data = name;
-        } 
-        else if(type == 'date') {
-            type = 'movie_releasedate';
-            update_data = date;
-        }
-        else if(type == 'genre') {
-            type = 'movie_genre';
-            update_data = genre;
-        }
-        else if(type == 'producer') {
-            type = 'movie_producer';
-            update_data = producer;
-        }
-        else if(type == 'runtime') {
-            type = 'movie_runtime';
-            update_data = runtime;
-        }
-        else if(type == 'country') {
-            type = 'movie_country';
-            update_data = country;
-        } 
+        //Search 정보와 colName 매칭
+        if(type == 'name') colName = 'movie_name';
+        else if(type == 'date') colName = 'movie_releasedate';
+        else if(type == 'genre') colName = 'movie_genre';
+        else if(type == 'producer') colName = 'movie_producer';
+        else if(type == 'runtime') colName = 'movie_runtime';
+        else if(type == 'country') colName = 'movie_country';
 
         //시작, 끝값 확인
         if(isEmpty(start) || isEmpty(end) || isEmpty(like) || isEmpty(type))
@@ -347,7 +326,7 @@ const movieController = {
             return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "start or end is not integer type");
 
         //DB 검증
-        if(!(await dbSearch(type, update_data, like, start, end)))
+        if(!(await dbSearch(type, colName, like, start, end)))
             return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data not found (check your postman param and body)");
 
         try {
@@ -356,15 +335,15 @@ const movieController = {
 
             //컬럼값 제한을 두고 싶을때 사용
             if(lims != undefined && lime != undefined)
-                temp = `LIMIT ${lims}, ${lime}`;
+                temp = ` LIMIT ${lims}, ${lime}`;
 
-            if(type == 'movie_runtime') {
+            if(colName == 'movie_runtime') {
                 query = `SELECT * FROM ${TABLE.MOVIE} WHERE movie_runtime between ${start} and ${end}` + temp;
                 [res] = await db.execute(query);
             }
             
             else {
-                query = `SELECT * FROM ${TABLE.MOVIE} WHERE ${type} LIKE '%${like}%'` + temp;
+                query = `SELECT * FROM ${TABLE.MOVIE} WHERE ${colName} LIKE '%${like}%'` + temp;
                 [res] = await db.execute(query, [like]);
             }
 

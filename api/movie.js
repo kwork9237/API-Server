@@ -22,7 +22,7 @@ router.put("/:id", async(req, res) => {
 });
 
 //D : Delete
-router.delete("/:id", async(req, res) => {
+router.delete("/:movid", async(req, res) => {
     const result = await movieController.delete(req);
     res.json(result);
 });
