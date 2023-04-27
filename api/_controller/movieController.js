@@ -129,37 +129,37 @@ const movieController = {
     update : async(req) => {
         ntime = getTime();
 
-        let { type } = req.query;
+        const { type } = req.query;
         const { name, date, genre, producer, runtime, country } = req.body;
         const { id } = req.params;
 
-        let update_data;
+        let update_data, colName;
 
         //업데이트할 정보 선택
         //name, date, genre, producer, runtime, country, all
 
         if(type == 'name') {
-            type = 'movie_name';
+            colName = 'movie_name';
             update_data = name;
         } 
         else if(type == 'date') {
-            type = 'movie_releasedate';
+            colName = 'movie_releasedate';
             update_data = date;
         }
         else if(type == 'genre') {
-            type = 'movie_genre';
+            colName = 'movie_genre';
             update_data = genre;
         }
         else if(type == 'producer') {
-            type = 'movie_producer';
+            colName = 'movie_producer';
             update_data = producer;
         }
         else if(type == 'runtime') {
-            type = 'movie_runtime';
+            colName = 'movie_runtime';
             update_data = runtime;
         }
         else if(type == 'country') {
-            type = 'movie_country';
+            colName = 'movie_country';
             update_data = country;
         } 
         else if(type == 'all') {
@@ -184,7 +184,7 @@ const movieController = {
             if(type == 'all')
                 query = `UPDATE ${TABLE.MOVIE} SET movie_name = '${name}', movie_releasedate = '${date}', movie_genre = '${genre}', movie_producer = '${producer}', movie_runtime = ${runtime}, movie_country = '${country}' WHERE movid = ${id}`;
             else
-                query = `UPDATE ${TABLE.MOVIE} SET ${type} = '${update_data}' WHERE movid = ${id}`;
+                query = `UPDATE ${TABLE.MOVIE} SET ${colName} = '${update_data}' WHERE movid = ${id}`;
 
             const [res] = await db.execute(query);
             
@@ -306,7 +306,7 @@ const movieController = {
     advancedSearch : async(req) => {
         ntime = getTime();
 
-        let { type, like, start, end, lims, lime } = req.query;
+        const { type, like, start, end, lims, lime } = req.query;
         let colName;
 
         //Search 정보와 colName 매칭
