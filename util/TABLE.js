@@ -3,7 +3,8 @@ const TABLE = {
     MyDB : "test", //테스트용
     USER : "user",
     MOVIE : "movie",
-    ABOOK : "account_book"
+    ABOOK : "account_book",
+    CAR : "carinfo"
 };
 
 module.exports = TABLE;

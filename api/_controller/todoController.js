@@ -2,32 +2,36 @@
 const db = require('../../plugins/mysql');
 const TABLE = require("../../util/TABLE");
 const STATUS = require("../../util/STATUS");
-const { resData, currentTime, isEmpty } = require("../../util/lib");
+const { resData, isEmpty } = require("../../util/lib");
 const moment = require("../../util/moment");
 
 //Functions
-//list
-const getTotal = async() => {
-    try {
-        const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.TODO}`;
-        const [[{ cnt }]] = await db.execute(query);
-        return cnt;
-    }
-    
-    catch (e) {
-        console.log(e.message);
-        return resData(STATUS.E300.result, STATUS.E300.resultDesc, moment().format('LT'));
-    }
-};
-
+//select one
 const getSelectOne = async (id) => {
     try {
+        //const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.TODO} WHERE id = ?`;
+
         const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.TODO} WHERE id = ?`;
         const values = [id];
         const [[{ cnt }]] = await db.execute(query, values);
         return cnt;
     }
 
+    catch (e) {
+        console.log(e.message);
+        return resData(STATUS.E300.result, STATUS.E300.resultDesc, moment().format('LT'));
+    }
+}
+
+//list
+const getTotal = async() => {
+    try {
+        //const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.TODO}`;
+        const query = `SELECT COUNT(*) AS cnt FROM ${TABLE.TODO} WHERE done='N'`;
+        const [[{ cnt }]] = await db.execute(query);
+        return cnt;
+    }
+    
     catch (e) {
         console.log(e.message);
         return resData(STATUS.E300.result, STATUS.E300.resultDesc, moment().format('LT'));
@@ -43,9 +47,10 @@ const getList = async (req) => {
         let where = "";
 
         if(lastId)
-            where = `WHERE id < ${lastId}`;
+            where = `AND id < ${lastId}`;
+            //where = `WHERE id < ${lastId}`;
 
-        const query = `SELECT * FROM ${TABLE.TODO} ${where} order by id desc limit 0, ${len}`;
+        const query = `SELECT * FROM ${TABLE.TODO} WHERE done='N' ${where} order by id desc limit 0, ${len}`;
         const [rows] = await db.execute(query); //배열 안에 DATA가 담겨있음
 
         return rows;
@@ -62,6 +67,32 @@ const getList = async (req) => {
 const todoController = {
     //create
     create : async (req) => {
+        const { title } = req.body;
+
+        if(isEmpty) return resData(STATUS.E100.result, STATUS.E100.resultDesc, moment().format('LT'));
+
+        try {
+            const query = `INSERT INTO ${TABLE.TODO} (title) VALUES (?)`;
+            const values = [title];
+
+            const [rows] = await db.execute(query, values);
+
+            if(rows.affectedRows == 1) {
+                return resData(
+                    STATUS.S200.result,
+                    STATUS.S200.resultDesc,
+                    moment().format('LT'),
+                    { id : rows.insertId }
+                );
+            }
+        }
+
+        catch (e) {
+            console.log(e.message);
+            return resData(STATUS.E300.result, STATUS.E300.resultDesc, moment().format('LT'));
+        }
+        
+        /*
         const { title, done } = req.body;
 
         //body check
@@ -86,6 +117,7 @@ const todoController = {
             console.log(e.message);
             return resData(STATUS.E300.result, STATUS.E300.resultDesc, moment().format('LT'));
         }
+        */
     },
 
     //list
@@ -198,7 +230,6 @@ const todoController = {
         try {
             let query = `INSERT INTO todo (title, done) VALUES `;
 
-            /* 
             //방식 1 - 바로 실행
             let temp;
 
@@ -206,8 +237,8 @@ const todoController = {
                 temp = `('${title}_${i}', '${done}')`;
                 res = await db.execute(query + temp);
             }
-            */
 
+            /*
             //방식 2 - Join 안쓴 배열 방식
             let i = 0, arr = [];
 
@@ -233,7 +264,7 @@ const todoController = {
                     moment().format('LT')
                 );
             }
-
+            */
             /*
             //기존코드
             let query = `INSERT INTO todo (title, done) VALUES `;

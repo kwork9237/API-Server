@@ -1,5 +1,6 @@
 //requirements
-const config = require('./config').development;
+//const config = require('./config').development;
+const config = require('./config')[process.env.NODE_ENV];
 const express = require('express');
 const http = require('http');
 
@@ -15,7 +16,8 @@ const cors = require('cors');
 //cors는 네트워크 허용 (Access) 옵션
 //무조건 라우터 실행 이전에 허용되어야 한다.
 let corsOptions = {
-    origin : '*',
+    //origin : '*',
+    origin : "http://localhost:4000",
     credential : true,
 };
 app.use(cors(corsOptions));

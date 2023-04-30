@@ -163,7 +163,6 @@ const movieController = {
             update_data = country;
         } 
         else if(type == 'all') {
-            type = 'all';
             if(isEmpty(name) || isEmpty(date) || isEmpty(genre) || isEmpty(producer) || isEmpty(runtime) || isEmpty(country))
                 return resData(STATUS.E100.result, STATUS.E100.resultDesc, ntime, "data is Empty")
         }

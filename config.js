@@ -22,6 +22,7 @@ const development = {
         connectionLimit : 20,
         connectTimeout : 5000,
     },
+    API_SERVER : "http://localhost:4000",
 }
 
-module.exports = { production, development }
+module.exports = { production, development };
