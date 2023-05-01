@@ -17,8 +17,8 @@ const cors = require('cors');
 //무조건 라우터 실행 이전에 허용되어야 한다.
 let corsOptions = {
     //origin : '*',
-    origin : "http://localhost:4000",
-    credential : true,
+    origin : "http://localhost", //이래야 CORS 에러 안뜸
+    credentials : true,
 };
 app.use(cors(corsOptions));
 

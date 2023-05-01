@@ -69,7 +69,7 @@ const todoController = {
     create : async (req) => {
         const { title } = req.body;
 
-        if(isEmpty) return resData(STATUS.E100.result, STATUS.E100.resultDesc, moment().format('LT'));
+        if(isEmpty(title)) return resData(STATUS.E100.result, STATUS.E100.resultDesc, moment().format('LT'));
 
         try {
             const query = `INSERT INTO ${TABLE.TODO} (title) VALUES (?)`;
@@ -220,7 +220,8 @@ const todoController = {
         }
 
         //Dummy Data Insert
-        const { title } = req.body;
+        //const { title } = req.body;
+        const title = req.body.title;
         const done = req.body.done || "N";
         const len = req.body.len || 100;
 
