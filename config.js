@@ -23,6 +23,7 @@ const development = {
         connectTimeout : 5000,
     },
     API_SERVER : "http://localhost:4000",
+    SECRET_KEY: "$2a$12$U3fh66EhjEts.vUTORXno.DKg1b30h8Z26fZll8lHUoEKIsqKYLdK",
 }
 
 module.exports = { production, development };

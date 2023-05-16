@@ -239,6 +239,14 @@ const todoController = {
                 res = await db.execute(query + temp);
             }
 
+            if(res.affectedRows != 0) {
+                return resData(
+                    STATUS.S200.result,
+                    STATUS.S200.resultDesc,
+                    moment().format('LT')
+                );
+            }
+
             /*
             //방식 2 - Join 안쓴 배열 방식
             let i = 0, arr = [];

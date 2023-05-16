@@ -16,6 +16,10 @@ const lib = {
     getTime() {
         return moment().format('LT');
     },
+
+    getIp(req) {
+        return req.ip.replace("::1", "127.0.0.1");
+    },
 };
 
 module.exports = lib;
