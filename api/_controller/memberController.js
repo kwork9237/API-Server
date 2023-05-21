@@ -138,7 +138,102 @@ const memberController = {
                 )
             };
         }
-    }
+    },
+
+    loginLocal : async(req) => {
+        try {
+            const { mb_id, mb_password } = req.body;
+            console.log(mb_id, mb_password);
+
+            if(isEmpty(mb_id) || isEmpty(mb_password)) {
+                return await resData(
+                    STATUS.E100.result,
+                    STATUS.E100.resultDesc,
+                    moment().format("LT")
+                );
+            }
+            
+            const payload = {
+                ...req.body
+            };
+
+            const password = payload.mb_password;
+            payload.mb_password = crypto.pbkdf2Sync(password, SECRET_KEY, 10, 64, "sha512").toString("base64");
+
+            let query = `SELECT mb_id, mb_photo from ${TABLE.USER}`;
+            const values = [];
+            const where = [];
+            const keys = Object.keys(payload);
+            for (const key of keys) {
+                where.push(`${key}=?`);
+                values.push(payload[key]);
+            }
+
+            if (where.length > 0)
+                query += " WHERE " + where.join(" AND ");
+
+            const [[data]] = await db.execute(query, values);
+
+            if (data) {
+                const at = moment().format("LT");
+                const ip = getIp(req);
+                const updatePayload = {
+                    mb_login_at : at,
+                    mb_login_ip : ip,
+                };
+
+                let updateQuery = `UPDATE ${TABLE.USER} SET {1} `;
+                const upWhere = [];
+                const upSets = [];
+                const keys = Object.keys(updatePayload);
+                for (const key of keys) {
+                upSets.push(`${key}=?`);
+                upWhere.push(updatePayload[key]);
+                }
+                upWhere.push(data.mb_id);
+                updateQuery = updateQuery.replace("{1}", upSets.join(", "));
+                updateQuery += `WHERE mb_id=?`;
+
+                const [updateResult] = await db.execute(updateQuery, upWhere);
+                if (updateResult.affectedRows == 1) {
+                    return resData(
+                        STATUS.S200.result,
+                        STATUS.S200.resultDesc,
+                        moment().format("LT"),
+                        data
+                    );
+                }
+                else {
+                    return {
+                        err: resData(
+                            STATUS.E400.result,
+                            STATUS.E400.resultDesc,
+                            moment().format("LT")
+                        ),
+                    };
+                }
+            }
+
+            else {
+                return resData(
+                    STATUS.S201.result,
+                    STATUS.S201.resultDesc,
+                    moment().format("LT")
+                );
+            }
+        }
+
+        catch (e) {
+            console.error(e);
+            return {
+                err: resData(
+                    STATUS.E300.result,
+                    STATUS.E300.resultDesc,
+                    moment().format("LT")
+                )
+            };
+        }
+    },
 }
 
 module.exports = memberController;
